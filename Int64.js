@@ -50,13 +50,18 @@ for (var i = 0; i < 256; i++) {
  * new Int64(hi, lo)             - Raw bits as two 32-bit values
  */
 var Int64 = module.exports = function(a1, a2) {
-  if (a1 instanceof Buffer) {
+	this.bigEndian = arguments[2] == undefined ? true : arguments[2];
+	if (a1 instanceof Buffer) {
     this.buffer = a1;
     this.offset = a2 || 0;
   } else {
     this.buffer = this.buffer || new Buffer(8);
     this.offset = 0;
-    this.setValue.apply(this, arguments);
+	if (typeof(a2) == "boolean"){
+		this.bigEndian = a2;
+		this.setValue.call(this,a1); //等价于this.setValue(a1);
+	}else
+    	this.setValue.apply(this, arguments);
   }
 };
 
@@ -74,11 +79,19 @@ Int64.prototype = {
    */
   _2scomp: function() {
     var b = this.buffer, o = this.offset, carry = 1;
-    for (var i = o + 7; i >= o; i--) {
-      var v = (b[i] ^ 0xff) + carry;
-      b[i] = v & 0xff;
-      carry = v >> 8;
-    }
+    if(this.bigEndian == true){
+		for (var i = o + 7; i >= o; i--) {
+      		var v = (b[i] ^ 0xff) + carry;
+      		b[i] = v & 0xff;
+      		carry = v >> 8;
+		}
+    }else{
+		for(var i = o; i <= o + 7; i++){
+			var v = (b[i] ^ 0xff) + carry;
+			b[i] = v & 0xff;
+			carry = v >> 8;
+		}
+	}
   },
 
   /**
@@ -94,7 +107,7 @@ Int64.prototype = {
       if (typeof(hi) == 'number') {
         // Simplify bitfield retrieval by using abs() value.  We restore sign
         // later
-        negate = hi < 0;
+		negate = hi < 0;
         hi = Math.abs(hi);
         lo = hi % VAL32;
         hi = hi / VAL32;
@@ -115,11 +128,18 @@ Int64.prototype = {
     // it's not worth the effort. Anything past the 32'nd bit is ignored.
 
     // Copy bytes to buffer
-    var b = this.buffer, o = this.offset;
-    for (var i = 7; i >= 0; i--) {
-      b[o+i] = lo & 0xff;
-      lo = i == 4 ? hi : lo >>> 8;
-    }
+    var b = this.buffer,o = this.offset;
+	if(this.bigEndian == true){
+    	for (var i = 7; i >= 0; i--) {
+      		b[o+i] = lo & 0xff;
+      		lo = i == 4 ? hi : lo >>> 8;
+		}
+    }else{
+		for (var i = 0; i <= 7; i++){
+			b[o+i] = lo & 0xff;
+			lo = i == 3 ? hi : lo >>> 8;
+		}
+	}
 
     // Restore sign of passed argument
     if (negate) this._2scomp();
@@ -140,18 +160,30 @@ Int64.prototype = {
     var b = this.buffer, o = this.offset;
 
     // Running sum of octets, doing a 2's complement
-    var negate = b[0] & 0x80, x = 0, carry = 1;
-    for (var i = 7, m = 1; i >= 0; i--, m *= 256) {
-      var v = b[o+i];
-
+   if(this.bigEndian == true){
+    	var negate = b[o] & 0x80, x = 0, carry = 1;
+    	for (var i = 7, m = 1; i >= 0; i--, m *= 256) {
+      	var v = b[o+i];
       // 2's complement for negative numbers
-      if (negate) {
-        v = (v ^ 0xff) + carry;
-        carry = v >> 8;
-        v = v & 0xff;
-      }
-
-      x += v * m;
+      	if (negate) {
+        	v = (v ^ 0xff) + carry;
+        	carry = v >> 8;
+        	v = v & 0xff;
+      		}
+      	x += v * m;
+    	}
+    }else{
+    	var negate = b[o + 7] & 0x80, x = 0, carry = 1;
+    	for (var i = 0, m = 1; i <= 7; i++, m *= 256) {
+      	var v = b[o+i];
+      // 2's complement for negative numbers
+      	if (negate) {
+        	v = (v ^ 0xff) + carry;
+        	carry = v >> 8;
+        	v = v & 0xff;
+      		}
+      	x += v * m;
+    	}
     }
 
     // Return Infinity if we've lost integer precision
