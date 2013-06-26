@@ -67,14 +67,14 @@ Int64.prototype = {
    */
   _2scomp: function() {
     var b = this.buffer, o = this.offset, carry = 1;
-    if(this.bigEndian == true){
+    if (this.bigEndian == true) {
       for (var i = o + 7; i >= o; i--) {
         var v = (b[i] ^ 0xff) + carry;
         b[i] = v & 0xff;
         carry = v >> 8;
       }
     } else {
-      for(var i = o; i <= o + 7; i++){
+      for (var i = o; i <= o + 7; i++) {
         var v = (b[i] ^ 0xff) + carry;
         b[i] = v & 0xff;
         carry = v >> 8;
@@ -117,13 +117,13 @@ Int64.prototype = {
 
     // Copy bytes to buffer
     var b = this.buffer,o = this.offset;
-  if(this.bigEndian == true){
+  if (this.bigEndian == true) {
       for (var i = 7; i >= 0; i--) {
           b[o+i] = lo & 0xff;
           lo = i == 4 ? hi : lo >>> 8;
-    }
-    }else{
-    for (var i = 0; i <= 7; i++){
+      }
+    } else {
+    for (var i = 0; i <= 7; i++) {
       b[o+i] = lo & 0xff;
       lo = i == 3 ? hi : lo >>> 8;
     }
@@ -148,7 +148,7 @@ Int64.prototype = {
     var b = this.buffer, o = this.offset;
 
     // Running sum of octets, doing a 2's complement
-   if(this.bigEndian == true){
+   if (this.bigEndian == true) {
       var negate = b[o] & 0x80, x = 0, carry = 1;
       for (var i = 7, m = 1; i >= 0; i--, m *= 256) {
         var v = b[o+i];
@@ -160,7 +160,7 @@ Int64.prototype = {
           }
         x += v * m;
       }
-    }else{
+    } else {
       var negate = b[o + 7] & 0x80, x = 0, carry = 1;
       for (var i = 0, m = 1; i <= 7; i++, m *= 256) {
         var v = b[o+i];
