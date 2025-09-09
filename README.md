@@ -1,3 +1,8 @@
+> [!TIP]
+> Lets not use node-int64 anymore, [BigInt](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/BigInt) will likely solve your big integer problems ;-)
+>
+> Therefore I'll archive this repository.
+
 JavaScript Numbers are represented as [IEEE 754 double-precision floats](http://steve.hollasch.net/cgindex/coding/ieeefloat.html).  Unfortunately, this means they lose integer precision for values beyond +/- 2^^53.  For projects that need to accurately handle 64-bit ints, such as [node-thrift](https://github.com/wadey/node-thrift), a performant, Number-like class is needed.  Int64 is that class.
 
 Int64 instances look and feel much like JS-native Numbers.  By way of example ...
